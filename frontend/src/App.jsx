@@ -56,6 +56,59 @@ const styles = {
     border: '1px solid var(--border-accent)',
     letterSpacing: '0.05em',
   },
+  headerRight: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+  },
+  settingsBtn: {
+    background: 'transparent',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    color: 'var(--text-secondary)',
+    fontFamily: 'inherit',
+    fontSize: '0.8rem',
+    padding: '4px 10px',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    gap: 5,
+  },
+  settingsPanel: {
+    borderBottom: '1px solid var(--border)',
+    background: 'var(--bg-surface)',
+    padding: '0.75rem 2rem',
+  },
+  settingsPanelInner: {
+    maxWidth: 1100,
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    flexWrap: 'wrap',
+  },
+  settingsLabel: {
+    fontSize: '0.78rem',
+    fontWeight: 600,
+    color: 'var(--text-muted)',
+    whiteSpace: 'nowrap',
+  },
+  settingsInput: {
+    flex: 1,
+    minWidth: 260,
+    background: 'var(--bg-input)',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    color: 'var(--text-primary)',
+    fontFamily: 'monospace',
+    fontSize: '0.82rem',
+    padding: '5px 10px',
+    outline: 'none',
+  },
+  settingsHint: {
+    fontSize: '0.75rem',
+    color: 'var(--text-muted)',
+  },
   main: {
     flex: 1,
     padding: '3rem 2rem 4rem',
@@ -110,11 +163,20 @@ const styles = {
   },
 }
 
+const DEFAULT_API = import.meta.env.VITE_API_URL || ''
+
 export default function App() {
   const [phase, setPhase]       = useState('idle')   // idle | loading | result
   const [campaign, setCampaign] = useState(null)
   const [error, setError]       = useState(null)
   const [progress, setProgress] = useState('')
+  const [apiUrl, setApiUrl]     = useState(DEFAULT_API)
+  const [showSettings, setShowSettings] = useState(false)
+
+  function endpoint(path) {
+    const base = apiUrl.replace(/\/$/, '')
+    return base ? `${base}${path}` : path
+  }
 
   async function handleGenerate({ prompt, product }) {
     setPhase('loading')
@@ -123,7 +185,7 @@ export default function App() {
     setProgress('Drafting campaign concept...')
 
     try {
-      const res = await fetch('/api/generate', {
+      const res = await fetch(endpoint('/api/generate'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt, product }),
@@ -188,9 +250,37 @@ export default function App() {
             <div style={styles.logoIcon}>⚡</div>
             AdCraft AI
           </div>
-          <span style={styles.badge}>Mini Hackathon #3</span>
+          <div style={styles.headerRight}>
+            <span style={styles.badge}>Mini Hackathon #3</span>
+            <button
+              style={styles.settingsBtn}
+              onClick={() => setShowSettings(s => !s)}
+              title="Configure backend URL"
+            >
+              ⚙ Backend
+            </button>
+          </div>
         </div>
       </header>
+
+      {/* ── Settings panel ── */}
+      {showSettings && (
+        <div style={styles.settingsPanel}>
+          <div style={styles.settingsPanelInner}>
+            <span style={styles.settingsLabel}>Backend URL</span>
+            <input
+              style={styles.settingsInput}
+              value={apiUrl}
+              onChange={e => setApiUrl(e.target.value)}
+              placeholder="https://xxxx-xx-xx-xx.ngrok-free.app  (leave blank for local dev)"
+              spellCheck={false}
+            />
+            <span style={styles.settingsHint}>
+              Paste your ngrok URL from Colab
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* ── Main ── */}
       <main style={styles.main}>
